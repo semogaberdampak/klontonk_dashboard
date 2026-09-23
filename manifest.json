@@ -1,0 +1,14 @@
+{
+  "id": "klontonk-dashboard",
+  "name": "Klontonk Dashboard",
+  "short_name": "Klontonk DB",
+  "description": "Dashboard manajemen Klontonk POS: client, cabang, langganan, pengguna, dan log.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F5F2",
+  "theme_color": "#0F172A",
+  "lang": "id",
+  "version": "1.0.0",
+  "categories": ["business", "productivity"]
+}

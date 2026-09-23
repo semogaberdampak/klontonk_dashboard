@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Klontonk Dashboard</title>
+  <meta name="description" content="Dashboard manajemen Klontonk POS: client, cabang, langganan, pengguna, dan log." />
+  <meta name="theme-color" content="#0F172A" />
+  <!-- Content Security Policy: skrip hanya dari aplikasi ini sendiri, koneksi hanya ke Supabase.
+       Hash Live Server disertakan agar pengembangan lokal dengan Live Server tetap jalan. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://bxynoilzdiqjiepdewnp.supabase.co wss://bxynoilzdiqjiepdewnp.supabase.co; base-uri 'self'; form-action 'self'" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F172A'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='17' font-weight='700' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ============ APP SHELL ============ -->
+  <div id="app" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">K</div>
+        <div class="brand-text"><strong>Klontonk</strong><span>Dashboard</span></div>
+      </div>
+      <nav class="nav" id="sidebarNav" aria-label="Navigasi utama"></nav>
+      <div class="sidebar-foot">
+        <div class="conn" id="connState" data-state="idle">
+          <span class="dot"></span><span id="connText">Memeriksa koneksi...</span>
+        </div>
+        <p class="ver">v<span id="appVersion">1.0.0</span> &#183; multi-tenant</p>
+      </div>
+    </aside>
+
+    <div class="content">
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="pageTitle">Ringkasan</h1>
+          <p id="pageSubtitle" class="muted"></p>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-ghost" id="refreshBtn" title="Muat ulang data halaman ini">Muat ulang</button>
+          <div class="user-chip" id="userChip"><span class="avatar" id="userAvatar">A</span><span id="userName">Admin</span></div>
+          <button type="button" class="btn btn-ghost danger" id="logoutBtn">Keluar</button>
+        </div>
+      </header>
+      <main id="appMain" class="main" role="main"></main>
+    </div>
+  </div>
+
+  <!-- Halaman login dirender ke sini bila belum masuk -->
+  <div id="loginRoot"></div>
+
+  <!-- ============ MODAL & TOAST ============ -->
+  <div id="modalRoot" class="modal-root" aria-hidden="true"></div>
+  <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- v1.0.0: cache-busting -- naikkan versi setiap rilis (bersamaan dengan sw.js) -->
+  <script type="module" src="js/app.js?v=1.0.0"></script>
+</body>
+</html>

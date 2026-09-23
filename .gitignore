@@ -1,0 +1,9 @@
+# Klontonk Dashboard - berkas yang tidak ikut di-commit
+.env
+.env.local
+*.log
+node_modules/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
