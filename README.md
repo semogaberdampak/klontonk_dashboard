@@ -42,24 +42,30 @@ ada di komentar bagian atas `db/dashboard-schema.sql`.
 
 ## Struktur berkas
 
+Aplikasi ditulis ulang dengan **React + TypeScript (strict)** berpola **MVC**, dibangun dengan Vite.
+
 ```
-index.html            app shell (sidebar, topbar, modal, toast)
-manifest.json  sw.js  PWA: bisa dibuka saat offline
-nginx.conf  compose.yaml  cara menjalankan secara lokal
-css/styles.css        tema dashboard (desktop: tabel lebar + filter)
-js/config.js          URL + publishable key Supabase, versi aplikasi
-js/supabase.js        klien REST/Auth ringan (tanpa pustaka) + paginasi + pesan error
-js/auth.js            login admin platform (email + password)
-js/router.js          router hash + kontrak halaman { render, init, act }
-js/ui.js              toast, modal, form-modal generik, tabel, paginasi, query PostgREST
-js/format.js          rupiah, tanggal Asia/Jakarta, rincian log, ekspor CSV
-js/lookups.js         daftar acuan (client, paket, cabang) untuk dropdown
-js/pages/*.js         13 halaman (lihat tabel di bawah)
-db/dashboard-schema.sql   SKEMA: tabel baru, trigger log, gate langganan, RLS, RPC
-db/verify.sql             uji struktur + isolasi + keamanan (jalankan setelah skema)
-db/verify-rls.sql         uji RLS sesungguhnya sebagai peran authenticated
-db/seed-demo.sql          data contoh (opsional) untuk mencoba tampilan
+src/
+  models/               MODEL  -- data & aturan akses
+    types.ts              tipe domain (Client, Plan, Subscription, ...)
+    result.ts             Result<T>, AppError, pesanError (tidak pernah melempar)
+    supabase.ts           klien supabase-js (timeout, sesi) + klien tanpa sesi
+    repositories/*.ts     satu repository per tabel/view/RPC (query PostgREST)
+  controllers/          CONTROLLER -- hook use<Halaman>Controller: filter di URL,
+                          pemuatan data, aksi simpan/hapus, validasi, ekspor CSV
+  views/                VIEW -- komponen halaman (hanya menampilkan) + AppShell, LoginPage
+  components/           komponen UI bersama: DataTable, Pager, FormModal, ConfirmModal, fields
+  context/              state lintas halaman: Auth, Lookups, Reload, Toast, Dialog
+  hooks/                useResource, useUrlFilters, useDraft, useGo, useConnection
+  lib/                  fungsi murni: format, tanggal Jakarta, CSV, query, lookups
+  routes.tsx            peta menu + judul + halaman (HashRouter, URL lama tetap sama)
+  styles/styles.css     tema (tidak berubah dari versi sebelumnya)
+public/                 manifest.json, sw.js (PWA)
+db/                     SKEMA & uji SQL (tidak berubah)
 ```
+
+Alur data: **View** memanggil **Controller** (hook) -> Controller memanggil **Repository** (Model)
+-> hasilnya `Result<T>` kembali ke View. View tidak pernah menyentuh Supabase langsung.
 
 ### Halaman
 
@@ -98,20 +104,28 @@ db/seed-demo.sql          data contoh (opsional) untuk mencoba tampilan
    Semua baris hasil harus **PASS**; `verify-rls.sql` sendiri tidak menampilkan error bila lolos.
 7. Selesai. Langkah berikutnya: Jalankan aplikasi (bagian di bawah) dan login.## Menjalankan aplikasi
 
-Tanpa build tool apa pun -- cukup berkas statis.
+Butuh Node.js 20+.
 
 ```bash
-podman compose up -d      # -> http://localhost:8081  (POS memakai 8080, bisa jalan bersama)
+npm install
+npm run dev               # pengembangan -> http://127.0.0.1:5173
+npm run build             # hasil produksi di dist/ (typecheck + bundling)
+npm test                  # unit test + smoke test seluruh halaman
+npm run test:coverage     # laporan coverage
 ```
 
-Bila `podman` belum ada di komputer ini, dua alternatif yang sama baiknya:
+Menyajikan hasil build secara lokal (POS memakai 8080, jadi keduanya bisa jalan bersama):
 
-- VS Code **Live Server** (klik kanan `index.html` -> Open with Live Server); CSP di `index.html`
-  sudah memuat hash skrip Live Server supaya pengembangan lokal tidak terblokir.
-- GitHub Pages / Cloudflare Pages / Netlify: unggah repo ini apa adanya (gratis), lalu arahkan
-  subdomain, mis. `dashboard.domain-anda.com`.
+```bash
+npm run build && podman compose up -d      # -> http://localhost:8081
+```
+
+Atau unggah isi folder `dist/` ke GitHub Pages / Cloudflare Pages / Netlify (gratis).
+URL Supabase dan publishable key bisa ditimpa lewat `.env` (lihat `.env.example`).
+Content Security Policy disuntik otomatis ke `dist/index.html` saat build.
 
 Setelah dibuka, login dengan **email + password** admin platform (bagian "Pasang sekali" langkah 3-5).
+Catatan: sesi lama dari versi 1.x tidak terbawa, jadi login sekali lagi setelah pembaruan.
 
 ## Alur pakai harian
 
@@ -217,18 +231,19 @@ client sebelum mereka menelepon.
 
 ## Rilis versi baru
 
-1. Ubah `APP_VERSION` di `js/config.js`.
-2. Naikkan `CACHE_NAME` di `sw.js` (mis. `klontonk-dashboard-v2`).
-3. Naikkan `?v=` pada tag `<script src="js/app.js?v=...">` di `index.html`.
-4. Unggah / hidupkan ulang. Perangkat akan mengambil versi baru (strategi network-first).
+1. Ubah `APP_VERSION` di `src/config.ts` (dan `version` di `package.json`).
+2. Naikkan `CACHE_NAME` di `public/sw.js` (mis. `klontonk-dashboard-v3`).
+3. `npm run build`, lalu unggah / hidupkan ulang. Perangkat mengambil versi baru (network-first).
 
 Tombol **Pengaturan -> Bersihkan cache aplikasi** (atau membuka `index.html?reset-cache=1`)
 berguna bila tampilan tertahan di versi lama.
 
 ## Pengujian
 
-- **Sintaks & impor JS (tanpa build tool):** salin `js/**/*.js` menjadi `.mjs` lalu `node --check`.
-  Seluruh berkas sudah lolos, dan setiap `import` sudah dicocokkan dengan `export` tujuan.
+- **Otomatis (`npm test`, Vitest):** fungsi murni (format, tanggal, CSV, filter), lapisan Model
+  (query PostgREST yang dibangun tiap repository, pemetaan error), hook, komponen (tabel,
+  paginasi, form-modal), dan *smoke test* yang merender seluruh aplikasi + setiap halaman.
+- **Tipe:** `npm run typecheck` (TypeScript strict) -- dijalankan juga oleh `npm run build`.
 - **Struktur & isolasi database:** `db/verify.sql` -- 16 pemeriksaan (tabel, RLS aktif,
   append-only, trigger terpasang, gate langganan, dan admin client tidak bisa mengakses cabang
   client lain). Skrip berjalan di dalam transaksi yang di-ROLLBACK, jadi data asli aman.

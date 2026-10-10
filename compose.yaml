@@ -1,5 +1,6 @@
-# Jalankan:  podman compose up -d      Hentikan:  podman compose down
+# Jalankan:  npm run build && podman compose up -d      Hentikan:  podman compose down
 # Dashboard disajikan di http://localhost:8081 (aplikasi POS memakai 8080, jadi keduanya bisa jalan bersama).
+# Yang disajikan adalah folder dist/ (hasil build), bukan source.
 services:
   dashboard:
     image: public.ecr.aws/nginx/nginx:alpine
@@ -9,5 +10,5 @@ services:
       # Hanya bisa diakses dari komputer ini.
       - "127.0.0.1:8081:80"
     volumes:
-      - ./:/usr/share/nginx/html:ro
+      - ./dist:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
