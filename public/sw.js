@@ -8,12 +8,12 @@
 // dibatasi, (3) pesan { type: 'CLEAR_CACHE' } dari halaman, (4) darurat: buka
 // <alamat-dashboard>/index.html?reset-cache=1
 
-const CACHE_NAME = 'klontonk-dashboard-v2';
+const CACHE_NAME = 'klontonk-dashboard-v3';
 const MAX_ENTRIES = 80;
 const NETWORK_TIMEOUT_MS = 6000;
 const RESET_PARAM = 'reset-cache';
 
-// App shell untuk offline. Berkas hasil build (assets/*-<hash>.js|css) bernama berbeda tiap
+// App shell untuk offline. Berkas hasil build (_nuxt/*-<hash>.js|css) bernama berbeda tiap
 // rilis, jadi tidak didaftar di sini: ia masuk cache saat pertama kali dimuat online.
 const PRECACHE = [
   './',

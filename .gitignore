@@ -1,12 +1,16 @@
-# Klontonk Dashboard - berkas yang tidak ikut di-commit
+node_modules/
+.nuxt/
+.output/
+.data/
+.nitro/
+.cache/
 .env
 .env.local
 *.log
-node_modules/
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+.codegraph/
 dist/
 coverage/
-.codegraph/

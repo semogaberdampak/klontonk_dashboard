@@ -42,30 +42,36 @@ ada di komentar bagian atas `db/dashboard-schema.sql`.
 
 ## Struktur berkas
 
-Aplikasi ditulis ulang dengan **React + TypeScript (strict)** berpola **MVC**, dibangun dengan Vite.
+Aplikasi ini memakai **Nuxt 4 (Vue 3) + TypeScript strict** dengan pola **MVC**, berjalan sebagai SPA statis
+(`ssr: false`) karena seluruh data dan login ada di Supabase.
 
 ```
-src/
+app/
   models/               MODEL  -- data & aturan akses
     types.ts              tipe domain (Client, Plan, Subscription, ...)
     result.ts             Result<T>, AppError, pesanError (tidak pernah melempar)
-    supabase.ts           klien supabase-js (timeout, sesi) + klien tanpa sesi
+    supabase.ts           klien supabase-js (dibuat saat pertama dipakai, timeout, sesi)
+    demoClient.ts         klien palsu untuk mode demo
     repositories/*.ts     satu repository per tabel/view/RPC (query PostgREST)
-  controllers/          CONTROLLER -- hook use<Halaman>Controller: filter di URL,
-                          pemuatan data, aksi simpan/hapus, validasi, ekspor CSV
-  views/                VIEW -- komponen halaman (hanya menampilkan) + AppShell, LoginPage
-  components/           komponen UI bersama: DataTable, Pager, FormModal, ConfirmModal, fields
-  context/              state lintas halaman: Auth, Lookups, Reload, Toast, Dialog
-  hooks/                useResource, useUrlFilters, useDraft, useGo, useConnection
-  lib/                  fungsi murni: format, tanggal Jakarta, CSV, query, lookups
-  routes.tsx            peta menu + judul + halaman (HashRouter, URL lama tetap sama)
-  styles/styles.css     tema (tidak berubah dari versi sebelumnya)
+  composables/
+    controllers/          CONTROLLER -- use<Halaman>Controller: filter di URL, pemuatan data,
+                            aksi simpan/hapus, validasi, ekspor CSV
+    use*.ts               infrastruktur: useAuth, useLookups, useResource, useDialog, useToast, ...
+  pages/                VIEW -- satu berkas .vue per rute (routing berbasis file, mode hash)
+  components/           VIEW -- komponen bersama: ui/ (tabel, kartu, paginasi), field/, modal/, app/
+  layouts/default.vue   kerangka: sidebar + topbar
+  middleware/auth.global.ts   penjaga akses (belum login -> /login)
+  plugins/              pengaturan runtime, pemulihan sesi, service worker
+  lib/                  fungsi murni: format, tanggal Jakarta, CSV, query, lookups, menu
+  assets/css/styles.css tema
 public/                 manifest.json, sw.js (PWA)
+scripts/inject-csp.mjs  menyuntik Content Security Policy (hash skrip inline) ke hasil build
 db/                     SKEMA & uji SQL (tidak berubah)
+nuxt.config.ts          konfigurasi build-time + runtimeConfig
 ```
 
-Alur data: **View** memanggil **Controller** (hook) -> Controller memanggil **Repository** (Model)
--> hasilnya `Result<T>` kembali ke View. View tidak pernah menyentuh Supabase langsung.
+Alur data: **View** (halaman/komponen) memanggil **Controller** (composable) -> Controller memanggil
+**Repository** (Model) -> hasilnya `Result<T>` kembali ke View. View tidak pernah menyentuh Supabase langsung.
 
 ### Halaman
 
@@ -108,10 +114,11 @@ Butuh Node.js 20+.
 
 ```bash
 npm install
-npm run dev               # pengembangan -> http://127.0.0.1:5173
-npm run build             # hasil produksi di dist/ (typecheck + bundling)
-npm test                  # unit test + smoke test seluruh halaman
-npm run test:coverage     # laporan coverage
+npm run dev               # pengembangan -> http://127.0.0.1:3000 (port 3000 bawaan Nuxt)
+npm run dev:demo          # pengembangan dengan data contoh, tanpa Supabase dan tanpa login
+npm run build             # hasil statis di .output/public (+ CSP)
+npm run build:demo        # sama, tetapi mode demo
+npm run typecheck         # vue-tsc (TypeScript strict)
 ```
 
 Menyajikan hasil build secara lokal (POS memakai 8080, jadi keduanya bisa jalan bersama):
@@ -120,12 +127,12 @@ Menyajikan hasil build secara lokal (POS memakai 8080, jadi keduanya bisa jalan 
 npm run build && podman compose up -d      # -> http://localhost:8081
 ```
 
-Atau unggah isi folder `dist/` ke GitHub Pages / Cloudflare Pages / Netlify (gratis).
-URL Supabase dan publishable key bisa ditimpa lewat `.env` (lihat `.env.example`).
-Content Security Policy disuntik otomatis ke `dist/index.html` saat build.
+Atau unggah isi `.output/public/` ke GitHub Pages / Cloudflare Pages / Netlify (gratis; untuk subpath, set
+`NUXT_APP_BASE_URL` saat build). URL Supabase dan publishable key bisa ditimpa lewat `.env`
+(`NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_KEY`; lihat `.env.example`).
 
 Setelah dibuka, login dengan **email + password** admin platform (bagian "Pasang sekali" langkah 3-5).
-Catatan: sesi lama dari versi 1.x tidak terbawa, jadi login sekali lagi setelah pembaruan.
+Catatan: sesi dari versi 1.x/2.x tidak terbawa, jadi login sekali lagi setelah pembaruan.
 
 ## Alur pakai harian
 
@@ -231,19 +238,20 @@ client sebelum mereka menelepon.
 
 ## Rilis versi baru
 
-1. Ubah `APP_VERSION` di `src/config.ts` (dan `version` di `package.json`).
-2. Naikkan `CACHE_NAME` di `public/sw.js` (mis. `klontonk-dashboard-v3`).
+1. Ubah `APP_VERSION` di `app/config.ts` (dan `version` di `package.json`).
+2. Naikkan `CACHE_NAME` di `public/sw.js` (mis. `klontonk-dashboard-v4`).
 3. `npm run build`, lalu unggah / hidupkan ulang. Perangkat mengambil versi baru (network-first).
 
-Tombol **Pengaturan -> Bersihkan cache aplikasi** (atau membuka `index.html?reset-cache=1`)
+Tombol **Pengaturan -> Bersihkan cache aplikasi** (atau membuka `/?reset-cache=1`)
 berguna bila tampilan tertahan di versi lama.
 
 ## Pengujian
 
-- **Otomatis (`npm test`, Vitest):** fungsi murni (format, tanggal, CSV, filter), lapisan Model
-  (query PostgREST yang dibangun tiap repository, pemetaan error), hook, komponen (tabel,
-  paginasi, form-modal), dan *smoke test* yang merender seluruh aplikasi + setiap halaman.
-- **Tipe:** `npm run typecheck` (TypeScript strict) -- dijalankan juga oleh `npm run build`.
+- **Tipe:** `npm run typecheck` (vue-tsc, TypeScript strict).
+- **Unit test:** **belum ada pada versi Nuxt ini** -- sengaja ditunda sampai struktur Nuxt 4 MVC selesai.
+  Versi React (tag git `react-version`) punya 178 tes Vitest; logika di `app/lib` dan `app/models`
+  tidak bergantung pada framework sehingga tesnya bisa dibawa kembali, sedangkan tes komponen perlu
+  ditulis ulang dengan `@vue/test-utils` / `@nuxt/test-utils`.
 - **Struktur & isolasi database:** `db/verify.sql` -- 16 pemeriksaan (tabel, RLS aktif,
   append-only, trigger terpasang, gate langganan, dan admin client tidak bisa mengakses cabang
   client lain). Skrip berjalan di dalam transaksi yang di-ROLLBACK, jadi data asli aman.
