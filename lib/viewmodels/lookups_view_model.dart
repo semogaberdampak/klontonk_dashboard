@@ -94,10 +94,4 @@ class LookupsViewModel extends ChangeNotifier {
     ready = true;
     notifyListeners();
   }
-
-  void reset() {
-    _data = const LookupsData();
-    ready = false;
-    notifyListeners();
-  }
 }

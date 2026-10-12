@@ -14,13 +14,8 @@ class AppConfig {
   /// Mode demo: data contoh tanpa Supabase dan tanpa login.
   static const demoMode = bool.fromEnvironment('DEMO_MODE');
 
-  /// Jumlah baris per halaman tabel (ditampilkan di halaman Pengaturan).
-  static const pageSize = 50;
-
   /// Domain email internal. Supabase Auth memerlukan email, sedangkan kasir login memakai username:
   /// akun client dibuat dengan email <username>@klontonk.local. HARUS sama dengan EMAIL_DOMAIN di
   /// klontonk_pos/js/config.js, kalau berbeda akun yang dibuat di sini tidak bisa login di POS.
   static const emailDomain = 'klontonk.local';
-
-  static const requestTimeout = Duration(seconds: 25);
 }

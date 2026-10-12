@@ -19,8 +19,6 @@ abstract class ResourceViewModel<T> extends ChangeNotifier {
   bool _disposed = false;
   int _token = 0;
 
-  bool get isReady => status == ResourceStatus.ready && data != null;
-
   /// Isi ViewModel turunan: ambil data dari repository.
   Future<Result<T>> fetch();
 

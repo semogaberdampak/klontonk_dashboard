@@ -73,7 +73,6 @@ class PemakaianViewModel extends ResourceViewModel<PemakaianData> {
   }
 
   void apply(String client, String dari, String sampai) => go(_path, {'client': client, 'dari': dari, 'sampai': sampai});
-  void pilih(String client) => go(_path, {'client': client, 'dari': filters.dari, 'sampai': filters.sampai});
   void lastDays(int hari) => go(_path, {'client': filters.client, 'dari': tanggalJakarta(-(hari - 1)), 'sampai': tanggalJakarta()});
 
   void exportCsv() {
