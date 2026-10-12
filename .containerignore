@@ -1,6 +1,5 @@
-node_modules
-.nuxt
-.output
+.dart_tool
+build
 .git
 .codegraph
 .env

@@ -2,15 +2,15 @@
 # Dashboard dibangun DI DALAM Podman (lihat Containerfile) dan disajikan di http://localhost:8081
 # (aplikasi POS memakai 8080, jadi keduanya bisa jalan bersama).
 #
-# Mode build: "build:demo" = data contoh tanpa Supabase dan tanpa login;
-#             "build"      = terhubung ke Supabase (butuh skema dari db/dashboard-schema.sql).
+# DEMO_MODE: "true"  = data contoh tanpa Supabase dan tanpa login;
+#            "false" = terhubung ke Supabase (butuh skema dari db/dashboard-schema.sql).
 services:
   dashboard:
     build:
       context: .
       dockerfile: Containerfile
       args:
-        BUILD_SCRIPT: build:demo
+        DEMO_MODE: "true"
     image: klontonk-dashboard:latest
     container_name: klontonk-dashboard
     restart: always

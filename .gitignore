@@ -1,9 +1,11 @@
-node_modules/
-.nuxt/
-.output/
-.data/
-.nitro/
-.cache/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+pubspec.lock
 .env
 .env.local
 *.log
@@ -12,5 +14,4 @@ Thumbs.db
 .vscode/
 .idea/
 .codegraph/
-dist/
 coverage/
